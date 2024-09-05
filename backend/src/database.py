@@ -1,12 +1,13 @@
 from sqlmodel import SQLModel, Session, create_engine
-from .config import SQLITE_DB
 
-db_address = f"sqlite:///{SQLITE_DB}.db"
+from src.core.config import settings
 
 engine = create_engine(
-    db_address,
-    echo= True
+    settings.SQLALCHEMY_DATABASE_URI,
+    echo= True,
+    connect_args={"check_same_thread": False}
 )
+
 
 async def get_session():
     with Session(engine) as session:
@@ -19,4 +20,3 @@ async def create_db_and_tables():
 
 async def drop_all_tables():
     SQLModel.metadata.drop_all(engine)
-
