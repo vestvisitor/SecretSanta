@@ -9,17 +9,15 @@ router = APIRouter(
 )
 
 
-@router.post("/wish/")
-async def make_wish(
+@router.get("")
+async def get_wishes(
         *,
         session: Session = Depends(get_session),
-        wish: WishBase
+        offset: int | None = 0,
+        limit: int | None = Query(default=10, le=10)
     ):
-    db_wish = Wish.model_validate(wish)
-    session.add(db_wish)
-    session.commit()
-    session.refresh(db_wish)
-    return db_wish
+    result = session.exec(select(Wish).offset(offset).limit(limit)).all()
+    return result
 
 
 @router.get("/wishes/{user_id}")
@@ -34,12 +32,14 @@ async def get_user_wishes(
     return result
 
 
-@router.get("/wishes/")
-async def get_wishes(
+@router.post("/wish/")
+async def make_wish(
         *,
         session: Session = Depends(get_session),
-        offset: int | None = 0,
-        limit: int | None = Query(default=10, le=10)
+        wish: WishBase
     ):
-    result = session.exec(select(Wish).offset(offset).limit(limit)).all()
-    return result
+    db_wish = Wish.model_validate(wish)
+    session.add(db_wish)
+    session.commit()
+    session.refresh(db_wish)
+    return db_wish

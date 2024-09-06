@@ -13,6 +13,18 @@ def hash_password(password: str) -> str:
     return f"{password}secret"
 
 
+@router.get("/{user_id}", response_model=UserPublic)
+async def read_user(
+        *,
+        session: Session = Depends(get_session),
+        user_id: uuid.UUID
+    ):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
 @router.post("", response_model=UserPublic)
 async def create_user(
         *,
@@ -27,15 +39,3 @@ async def create_user(
     session.refresh(db_user)
 
     return db_user
-
-
-@router.get("/{user_id}", response_model=UserPublic)
-async def read_user(
-        *,
-        session: Session = Depends(get_session),
-        user_id: uuid.UUID
-    ):
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
