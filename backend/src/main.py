@@ -1,12 +1,10 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from contextlib import asynccontextmanager
 
-from .database import create_db_and_tables, drop_all_tables
-
+from src.core.db import create_db_and_tables, drop_all_tables
 from src.api.main import api_router
-
-from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager

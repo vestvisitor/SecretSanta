@@ -1,9 +1,10 @@
 import WishCardPublic from '../components/WishCardPublic.jsx';
 
+import { useNavigate } from "react-router-dom";
+
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import {
-  LoginOutlined,
   LogoutOutlined,
   UserOutlined,
   HomeOutlined,
@@ -19,7 +20,51 @@ function getItem(label, key, icon, children) {
   };
 }
 
-const MainPage = () => {
+const WishlistPage = () => {
+
+  const navigate = useNavigate();
+
+  const [wishes, setWishes] = useState([])
+
+  const fetchWishes = (number, userId) => {
+    axios.get(`http://127.0.0.1:8000/wishes/${userId}`,
+      {
+        params: {
+          offset: number
+        }
+      }
+    ).then(r => {
+      const wishResponse = r.data
+    setWishes(wishResponse)
+    })
+  }
+
+  const [pages, setPages] = useState(0)
+
+  const fetchPages = (userId) => {
+    axios.get(`http://127.0.0.1:8000/wishes/private-pagination/${userId}`,
+    ).then(p => {
+      const pageResponse = p.data
+      setPages(pageResponse)
+    })
+  }
+
+  const [userData, setuserData] = useState([])
+
+  const fetchUserData = (userId, token) => {
+    axios.get(`http://127.0.0.1:8000/users/${userId}`,
+      {
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+          
+        }
+      }
+    ).then(p => {
+      const userResponse = p.data
+      setuserData(userResponse)
+    })
+  }
 
   const [items, setItems] = useState([])
 
@@ -32,7 +77,7 @@ const MainPage = () => {
           
         }
     }).then(r => {
-      console.log(r.data)
+
       const items = [
         getItem(<a href='/'>Home page</a>, '1', <HomeOutlined />),
         getItem('User', 'sub1', <UserOutlined />, [
@@ -42,15 +87,20 @@ const MainPage = () => {
         ]),
         getItem('Logout', '6', <LogoutOutlined />),
       ];
-      setItems(items)
+
+      setItems(items);
+
+      const userId = window.location.href.split('/')[4]
+
+      fetchUserData(userId, token)
+
+      fetchWishes(0, userId)
+
+      fetchPages(userId);
     })
     .catch(function (error) {
-      const items = [
-        getItem(<a href='/'>Home page</a>, '1', <HomeOutlined />),
-        getItem(<a href='/#login'>Login</a>, '2', <LoginOutlined />),
-      ];
       console.log(error);
-      setItems(items)
+      navigate('/login');
     });
   }
 
@@ -59,41 +109,9 @@ const MainPage = () => {
     AuthenticateUser(access_token);
   }, []);
 
-  const [wishes, setWishes] = useState([])
-
-  const fetchWishes = (number) => {
-    axios.get('http://127.0.0.1:8000/wishes',
-      {
-        params: {
-          offset: number
-        }
-      }
-    ).then(r => {
-      const wishResponse = r.data
-      console.log(wishResponse);
-    setWishes(wishResponse)
-    })
-  }
-
-  useEffect(() => {
-    fetchWishes(0)
-  }, []);
-
-  const [pages, setPages] = useState([])
-
-  const fetchPages = () => {
-    axios.get('http://127.0.0.1:8000/wishes/public-pagination').then(p => {
-      const pageResponse = p.data
-      setPages(pageResponse)
-    })
-  }
-
-  useEffect(() => {
-    fetchPages()
-  }, []);
-
   function OnChange (page) {
-    fetchWishes((page-1)*5)
+    // fetchWishes((page-1)*5, userData.id)
+    console.log(window.location.href.split('/')[4])
   }
 
   const [collapsed, setCollapsed] = useState(true);
@@ -108,7 +126,7 @@ const MainPage = () => {
     >
       <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
+        <Menu theme="dark" defaultSelectedKeys={['4']} mode="inline" items={items} />
       </Sider>
       <Layout>
         <Content
@@ -121,8 +139,10 @@ const MainPage = () => {
               margin: '16px 0',
             }}
           >
-            <Breadcrumb.Item>Home Page</Breadcrumb.Item>
+            <Breadcrumb.Item>{userData.username}</Breadcrumb.Item>
+            <Breadcrumb.Item>Wishlist</Breadcrumb.Item>
           </Breadcrumb>
+          
           {wishes.map((item) => (
             <div
             style={{
@@ -132,7 +152,7 @@ const MainPage = () => {
               borderRadius: borderRadiusLG,
             }}
             >
-            <WishCardPublic
+            <WishCardPublic 
               id={item.id}
               name={item.name}
               link={item.link}
@@ -162,4 +182,4 @@ const MainPage = () => {
     </Layout>
   );
 };
-export default MainPage;
+export default WishlistPage;

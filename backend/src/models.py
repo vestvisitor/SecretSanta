@@ -2,51 +2,61 @@ from sqlmodel import SQLModel, Field, Relationship
 import uuid
 
 
+class WishUserLink(SQLModel, table=True):
+    wish_id: int | None = Field(default=None, foreign_key="wish.id", primary_key=True)
+    user_id: uuid.UUID | None = Field(default=None, foreign_key="user.id", primary_key=True)
+
+
 class UserBase(SQLModel):
-    first_name: str
-    last_name: str
+    username: str = Field(min_length=8, max_length=32)
+    email: str = Field(max_length=254)
 
 
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str = Field()
+    disabled: bool | None = None
+
+    wishes: list["Wish"] = Relationship(back_populates="users", link_model=WishUserLink)
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(min_length=8, max_length=25)
 
 
 class UserPublic(UserBase):
     id: uuid.UUID
 
 
-class WishBase(SQLModel):
-    name: str
+class UserLogin(SQLModel):
+    username: str = Field(min_length=8, max_length=32)
+    password: str = Field(min_length=8, max_length=25)
+
+
+class WishMake(SQLModel):
     link: str
-    priority: int
-
-    creator_id: uuid.UUID = Field(foreign_key="user.id")
+    priority: int = Field(default=1, ge=1, le=5)
 
 
-class Wish(WishBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-
-
-class WishlistBase(SQLModel):
+class WishPars(SQLModel):
     name: str
-    owner_id: uuid.UUID = Field(foreign_key="user.id")
+    picture_src: str
 
 
-class Wishlist(WishlistBase, table=True):
+class WishAdd(SQLModel):
+    wish_id: int
+
+
+class Wish(WishMake, WishPars, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-
-class WishlistPublic(WishlistBase):
-    wishes: list[WishBase]
+    users: list[User] = Relationship(back_populates="wishes", link_model=WishUserLink)
 
 
-# class Game(SQLModel, table=True):
-#     id: int | None = Field(default=None, primary_key=True)
-#
-#     creator: uuid.UUID = Field(foreign_key="user.id")
-#     participants: ["User"]
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    sub: str | None = None

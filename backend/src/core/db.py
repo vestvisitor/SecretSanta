@@ -4,14 +4,9 @@ from src.core.config import settings
 
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,
-    echo= True,
+    # echo= True,
     connect_args={"check_same_thread": False}
 )
-
-
-async def get_session():
-    with Session(engine) as session:
-        yield session
 
 
 async def create_db_and_tables():

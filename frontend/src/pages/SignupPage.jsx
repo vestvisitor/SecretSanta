@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { Layout, theme, Flex } from 'antd';
-import LoginForm from '../components/LoginForm.jsx'
+import SignupForm from '../components/SignupForm.jsx'
 import { useNavigate } from "react-router-dom";
 import React, { useEffect } from 'react';
 
 const { Content, Footer } = Layout;
 
-const LoginPage = () => {
+const SignupPage = () => {
 
   const navigate = useNavigate();
 
@@ -24,7 +24,7 @@ const LoginPage = () => {
     })
     .catch(function (error) {
       console.log(error);
-      navigate('/login');
+      navigate('/signup');
     });
   }
 
@@ -36,8 +36,9 @@ const LoginPage = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  
+
   return (
+
     <Layout
       style={{
         minHeight: '100vh',
@@ -60,20 +61,20 @@ const LoginPage = () => {
               borderRadius: borderRadiusLG,
             }}
           >
-            <h1 
-             style={{
+            <h1
+               style={{
                 textAlign: 'center',
-             }}
+              }}
             >
-                Log in
+                Sign up
             </h1>
-            <LoginForm />
+            <SignupForm />
             <p
               style={{
                 textAlign: 'center',
              }}
             >
-              Don't have an account? <a href='/#signup'>Signup</a>
+              Already have an account? <a href='/#login'>Log in</a>
             </p>
           </div>
         </Content>
@@ -88,4 +89,4 @@ const LoginPage = () => {
     </Layout>
   );
 };
-export default LoginPage;
+export default SignupPage;

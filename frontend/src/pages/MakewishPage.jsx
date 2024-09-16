@@ -1,14 +1,17 @@
-import WishCardPublic from '../components/WishCardPublic.jsx';
+import MakeWishCard from "../components/MakeWishCard.jsx"
 
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
 import {
-  LoginOutlined,
   LogoutOutlined,
   UserOutlined,
   HomeOutlined,
 } from '@ant-design/icons';
-import { Breadcrumb, Layout, Menu, theme, Pagination } from 'antd';
+import { Breadcrumb, Layout, Menu, theme, Input, Rate } from 'antd';
+
+const { Search } = Input;
+
 const { Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
   return {
@@ -19,7 +22,11 @@ function getItem(label, key, icon, children) {
   };
 }
 
-const MainPage = () => {
+const AddwishPage = () => {
+
+  const navigate = useNavigate();
+
+  const [userData, setUserdata] = useState([]);
 
   const [items, setItems] = useState([])
 
@@ -32,7 +39,7 @@ const MainPage = () => {
           
         }
     }).then(r => {
-      console.log(r.data)
+      setUserdata(r.data)
       const items = [
         getItem(<a href='/'>Home page</a>, '1', <HomeOutlined />),
         getItem('User', 'sub1', <UserOutlined />, [
@@ -42,15 +49,12 @@ const MainPage = () => {
         ]),
         getItem('Logout', '6', <LogoutOutlined />),
       ];
-      setItems(items)
+      setItems(items);
+
     })
     .catch(function (error) {
-      const items = [
-        getItem(<a href='/'>Home page</a>, '1', <HomeOutlined />),
-        getItem(<a href='/#login'>Login</a>, '2', <LoginOutlined />),
-      ];
       console.log(error);
-      setItems(items)
+      navigate('/login');
     });
   }
 
@@ -59,41 +63,39 @@ const MainPage = () => {
     AuthenticateUser(access_token);
   }, []);
 
-  const [wishes, setWishes] = useState([])
+  const [wishdata, setWishData] = useState()
 
-  const fetchWishes = (number) => {
-    axios.get('http://127.0.0.1:8000/wishes',
+  const postWish = (token, obj) => {
+    axios.post('http://127.0.0.1:8000/wishes/make',
+      obj,
       {
-        params: {
-          offset: number
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+          
         }
       }
-    ).then(r => {
-      const wishResponse = r.data
-      console.log(wishResponse);
-    setWishes(wishResponse)
+    ).then(w => {
+      const linkResponse = w.data
+      setWishData(linkResponse)
+      navigate('/wishlist');
     })
+    .catch(function (error) {
+      console.log(error);
+      navigate('/');
+    });
   }
-
-  useEffect(() => {
-    fetchWishes(0)
-  }, []);
-
-  const [pages, setPages] = useState([])
-
-  const fetchPages = () => {
-    axios.get('http://127.0.0.1:8000/wishes/public-pagination').then(p => {
-      const pageResponse = p.data
-      setPages(pageResponse)
-    })
+  
+  function onSearch (value) {
+    const obj = {link: value, priority: stars}
+    const access_token = localStorage.getItem('access_token');
+    postWish(access_token, obj)
   }
+  
+  const [stars, setStars] = useState()
 
-  useEffect(() => {
-    fetchPages()
-  }, []);
-
-  function OnChange (page) {
-    fetchWishes((page-1)*5)
+  function onChange (star) {
+    setStars(star);
   }
 
   const [collapsed, setCollapsed] = useState(true);
@@ -108,7 +110,7 @@ const MainPage = () => {
     >
       <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
+        <Menu theme="dark" defaultSelectedKeys={['5']} mode="inline" items={items} />
       </Sider>
       <Layout>
         <Content
@@ -121,36 +123,48 @@ const MainPage = () => {
               margin: '16px 0',
             }}
           >
-            <Breadcrumb.Item>Home Page</Breadcrumb.Item>
+            <Breadcrumb.Item>User</Breadcrumb.Item>
+            <Breadcrumb.Item>Make wish</Breadcrumb.Item>
           </Breadcrumb>
-          {wishes.map((item) => (
-            <div
+          <div
             style={{
+              alignContent: 'center',
               margin: '16px 0',  
               padding: 24,
+              minHeight: 260,
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
             }}
-            >
-            <WishCardPublic
-              id={item.id}
-              name={item.name}
-              link={item.link}
-              image_src={item.picture_src}
+          >
+            <h1
+              style={{
+                textAlign: 'center'
+              }}
+            >Write down your wish!</h1>
+            
+            <p>Choose priority:</p>
+            <Rate
+            style={{
+              padding: 1
+            }}
+              allowClear={false}
+              defaultValue={1}
+              onChange={onChange}
+            />  
+
+            <Search
+            style={{
+              padding: 10
+            }}
+              placeholder="input the wish link"
+              enterButton="Make"
+              size="large"
+              onSearch={onSearch}
             />
-            </div>
-          ))}
+                           
+          </div>   
+                    
         </Content>
-
-        <Pagination
-          style={{
-            justifyContent: 'center'
-          }}
-          defaultCurrent={1}
-          total={pages} 
-          onChange={OnChange}
-        />
-
         <Footer
           style={{
             textAlign: 'center',
@@ -162,4 +176,4 @@ const MainPage = () => {
     </Layout>
   );
 };
-export default MainPage;
+export default AddwishPage;
