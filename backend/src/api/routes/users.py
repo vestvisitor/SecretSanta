@@ -2,7 +2,7 @@ from pwd import struct_passwd
 from typing import Annotated
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import select
 import uuid
 from src.models import UserPublic, UserCreate, User, Token, UserLogin
 from src.api.deps import SessionDep, authenticate_user, CurrentActiveUser
